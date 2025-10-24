@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-RTL">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe Trainer</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the game */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Use a CSS variable for dynamic grid sizing */
+        #game-grid {
+            display: grid;
+            grid-template-columns: repeat(var(--grid-size, 4), 1fr);
+            grid-template-rows: repeat(var(--grid-size, 4), 1fr);
+            max-width: 600px;
+            max-height: 600px;
+            width: 90vw;
+            height: 90vw;
+            aspect-ratio: 1 / 1;
+        }
+
+        .cell {
+            /* Glassmorphism style for cells */
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.2s ease-in-out;
+            font-family: 'Arial', sans-serif;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .cell:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Winning cell highlight */
+        .win-cell-x {
+            animation: pulse-win-x 1s infinite;
+        }
+
+        .win-cell-o {
+            animation: pulse-win-o 1s infinite;
+        }
+
+        @keyframes pulse-win-x {
+            0%, 100% { background-color: rgba(96, 165, 250, 0.4); } /* blue-400 */
+            50% { background-color: rgba(96, 165, 250, 0.8); }
+        }
+
+        @keyframes pulse-win-o {
+            0%, 100% { background-color: rgba(244, 114, 182, 0.4); } /* pink-400 */
+            50% { background-color: rgba(244, 114, 182, 0.8); }
+        }
+
+        /* Custom button styles */
+        .btn {
+            @apply px-4 py-2 rounded-lg font-semibold text-white shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900;
+        }
+
+        .btn-primary {
+            @apply bg-blue-600 hover:bg-blue-700 focus:ring-blue-500;
+        }
+
+        .btn-secondary {
+            @apply bg-gray-700 hover:bg-gray-600 focus:ring-gray-500;
+        }
+        
+        .btn-selected {
+            @apply bg-pink-600 ring-2 ring-pink-400 focus:ring-pink-500;
+        }
+
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <main class="w-full max-w-3xl flex flex-col items-center space-y-6">
+        <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-500">
+            Tic-Tac-Toe Trainer
+        </h1>
+
+        <!-- Step 1: Game Mode Selection -->
+        <div id="mode-selection" class="w-full p-4 bg-gray-800 rounded-xl shadow-2xl">
+            <h2 class="text-xl font-semibold text-center mb-4">Select Game Mode</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-lg mx-auto">
+                <button id="btn-pvp" class="btn btn-secondary flex flex-col items-center p-4">
+                    <span class="text-3xl">🧑‍🤝‍🧑</span>
+                    <span>Player vs. Player</span>
+                    <span class="text-xs font-normal">(4x4 Grid)</span>
+                </button>
+                <button id="btn-pve-classic" class="btn btn-secondary flex flex-col items-center p-4">
+                    <span class="text-3xl">🤖</span>
+                    <span>Player vs. AI</span>
+                    <span class="text-xs font-normal">(4x4 Grid)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: AI Difficulty Selection (Hidden by default) -->
+        <div id="difficulty-selection" class="w-full p-4 bg-gray-800 rounded-xl shadow-2xl hidden">
+            <h2 class="text-xl font-semibold text-center mb-4">Select AI Opponent</h2>
+            <div id="difficulty-buttons" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Buttons will be dynamically populated here -->
+            </div>
+        </div>
+        
+        <!-- Game Area -->
+        <div id="game-area" class="w-full flex flex-col items-center space-y-4 hidden">
+            <!-- Scoreboard -->
+            <div class="w-full flex justify-around items-center p-3 bg-gray-800 rounded-lg shadow-inner">
+                <div class="text-center">
+                    <span class="text-xl font-semibold text-blue-400">Player X (Rounds)</span>
+                    <span id="score-x" class="block text-4xl font-bold">0</span>
+                </div>
+                <div class="text-center">
+                    <span class="text-lg font-semibold text-gray-400">First to 5 Wins</span>
+                </div>
+                <div class="text-center">
+                    <span class="text-xl font-semibold text-pink-400">Player O (Rounds)</span>
+                    <span id="score-o" class="block text-4xl font-bold">0</span>
+                </div>
+            </div>
+            
+            <div id="status-display" class="text-2xl font-semibold h-8"></div>
+            <div id="game-grid" class="rounded-lg shadow-inner" style="--grid-size: 4;">
+                <!-- Cells will be dynamically generated here -->
+            </div>
+            <button id="btn-reset" class="btn btn-primary">Reset Match</button>
+            <button id="btn-main-menu" class="btn btn-secondary text-sm">Back to Main Menu</button>
+        </div>
+    </main>
+
+    <script>
+        // --- DOM Elements ---
+        const modeSelection = document.getElementById('mode-selection');
+        const difficultySelection = document.getElementById('difficulty-selection');
+        const difficultyButtons = document.getElementById('difficulty-buttons');
+        const gameArea = document.getElementById('game-area');
+        const statusDisplay = document.getElementById('status-display');
+        const gameGrid = document.getElementById('game-grid');
+        const btnReset = document.getElementById('btn-reset');
+        const btnMainMenu = document.getElementById('btn-main-menu');
+        const scoreXDisplay = document.getElementById('score-x');
+        const scoreODisplay = document.getElementById('score-o');
+        
+        const btnPVP = document.getElementById('btn-pvp');
+        const btnPVEClassic = document.getElementById('btn-pve-classic');
+
+        // --- Game State Variables ---
+        let gameState = {
+            gameMode: null, // 'pvp', 'pve-classic'
+            aiDifficulty: null, // 'easy', 'medium', 'hard'
+            board: [],
+            currentPlayer: 'X',
+            gameActive: false,
+            gridSize: 4,
+            aiPlayer: 'O',
+            humanPlayer: 'X',
+            score: { X: 0, O: 0 }
+        };
+        
+        // --- AI Definitions ---
+        const AI_DEFINITIONS = {
+            'easy': { name: 'Trainee (Easy)', desc: 'Plays random moves.' },
+            'medium': { name: 'Sparring (Medium)', desc: 'Uses rules: Win, Block, Center...' },
+            'hard': { name: 'Master (Hard)', desc: 'Perfect Minimax AI (on 3x3).' }
+        };
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', init);
+
+        function init() {
+            btnPVP.addEventListener('click', () => selectGameMode('pvp'));
+            btnPVEClassic.addEventListener('click', () => selectGameMode('pve-classic'));
+            btnReset.addEventListener('click', resetMatch);
+            btnMainMenu.addEventListener('click', showMainMenu);
+        }
+
+        function showMainMenu() {
+            modeSelection.classList.remove('hidden');
+            difficultySelection.classList.add('hidden');
+            gameArea.classList.add('hidden');
+            gameState.gameActive = false;
+        }
+
+        function selectGameMode(mode) {
+            gameState.gameMode = mode;
+            modeSelection.classList.add('hidden');
+
+            // Highlight selected button (optional)
+            [btnPVP, btnPVEClassic].forEach(btn => btn.classList.remove('btn-selected'));
+            document.getElementById(`btn-${mode}`).classList.add('btn-selected');
+
+            if (mode === 'pvp') {
+                gameState.aiDifficulty = null;
+                resetMatch(); // Start a new match
+            } else {
+                // Populate and show difficulty selection
+                populateDifficultyButtons(mode);
+                difficultySelection.classList.remove('hidden');
+            }
+        }
+        
+        function populateDifficultyButtons(mode) {
+            difficultyButtons.innerHTML = '';
+            let availableAIs = ['easy', 'medium', 'hard']; // Only 3 options
+            
+            availableAIs.forEach(key => {
+                const ai = AI_DEFINITIONS[key];
+                const button = document.createElement('button');
+                button.className = 'btn btn-secondary flex flex-col items-center p-4 text-left';
+                button.innerHTML = `
+                    <span class="font-bold text-lg">${ai.name}</span>
+                    <span class="text-xs font-normal text-gray-400">${ai.desc}</span>
+                `;
+                button.addEventListener('click', () => selectDifficulty(key));
+                difficultyButtons.appendChild(button);
+            });
+            
+            const note = document.createElement('p');
+            note.className = 'text-xs text-gray-400 text-center col-span-1 md:col-span-3 mt-2';
+            note.textContent = "Note: 'Hard' AI will use 'Medium' logic on the 4x4 grid.";
+            difficultyButtons.appendChild(note);
+        }
+
+        function selectDifficulty(difficulty) {
+            gameState.aiDifficulty = difficulty;
+            difficultySelection.classList.add('hidden');
+            
+            // Highlight selected button (visual feedback)
+            Array.from(difficultyButtons.children).forEach(btn => {
+                btn.classList.remove('btn-selected');
+                if (btn.textContent.includes(AI_DEFINITIONS[difficulty].name)) {
+                    btn.classList.add('btn-selected');
+                }
+            });
+            
+            resetMatch(); // Start a new match with the selected AI
+        }
+        
+        function resetMatch() {
+            gameState.score = { X: 0, O: 0 };
+            updateScoreboard();
+            startGame(); // Start the first round
+        }
+
+        function startGame() {
+            // This function now starts a new ROUND, not a whole match
+            gameState.gridSize = 4;
+            gameState.board = Array(gameState.gridSize * gameState.gridSize).fill('');
+            gameState.currentPlayer = 'X';
+            gameState.gameActive = true;
+            
+            createGrid();
+            
+            // Check if match is already won
+            if (gameState.score.X === 5 || gameState.score.O === 5) {
+                const winner = gameState.score.X === 5 ? 'X' : 'O';
+                updateStatus(`Player ${winner} WON THE MATCH!`);
+                gameState.gameActive = false;
+            } else {
+                updateStatus(`Player ${gameState.currentPlayer}'s Turn`);
+            }
+            
+            // Show the game area
+            gameArea.classList.remove('hidden');
+        }
+        
+        function createGrid() {
+            gameGrid.innerHTML = '';
+            gameGrid.style.setProperty('--grid-size', gameState.gridSize);
+            
+            for (let i = 0; i < gameState.gridSize * gameState.gridSize; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell flex items-center justify-center text-4xl md:text-6xl lg:text-7xl cursor-pointer rounded-lg';
+                cell.dataset.index = i;
+                
+                // Restore board state (for expanding grid)
+                if(gameState.board[i]) {
+                    cell.textContent = gameState.board[i];
+                    cell.classList.add(gameState.board[i] === 'X' ? 'text-blue-400' : 'text-pink-400');
+                }
+                
+                cell.addEventListener('click', handleCellClick);
+                gameGrid.appendChild(cell);
+            }
+        }
+
+        function handleCellClick(e) {
+            const index = parseInt(e.target.dataset.index);
+
+            if (gameState.board[index] !== '' || !gameState.gameActive) {
+                return;
+            }
+
+            makeMove(index, gameState.currentPlayer);
+
+            if (checkGameEnd()) {
+                return;
+            }
+
+            // Switch player
+            gameState.currentPlayer = (gameState.currentPlayer === 'X') ? 'O' : 'X';
+            updateStatus(`Player ${gameState.currentPlayer}'s Turn`);
+
+            // Check for AI turn
+            if (gameState.gameMode !== 'pvp' && gameState.currentPlayer === gameState.aiPlayer && gameState.gameActive) {
+                // Add a small delay for AI "thinking"
+                setTimeout(triggerAI, 500);
+            }
+        }
+
+        function makeMove(index, player) {
+            gameState.board[index] = player;
+            const cell = gameGrid.querySelector(`[data-index='${index}']`);
+            cell.textContent = player;
+            cell.classList.add(player === 'X' ? 'text-blue-400' : 'text-pink-400');
+            cell.style.cursor = 'not-allowed';
+        }
+
+        function checkGameEnd() {
+            const winResult = checkWin(gameState.currentPlayer);
+            if (winResult.won) {
+                // A win is always a final win *for the round*.
+                endGame('win', winResult.cells);
+                return true;
+            }
+
+            const isDraw = checkDraw();
+            if (isDraw) {
+                // Expansion logic removed. A draw is just a draw.
+                endGame('draw');
+                return true;
+            }
+            return false;
+        }
+
+        function checkWin(player) {
+            const size = gameState.gridSize;
+            const winLen = 4; // *** WIN CONDITION IS NOW 4 ***
+            const board = gameState.board;
+
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c <= size - winLen; c++) {
+                    // Check horizontal
+                    let winningCells = [];
+                    let horizontalWin = true;
+                    for (let k = 0; k < winLen; k++) {
+                        const index = r * size + (c + k);
+                        if (board[index] === player) {
+                            winningCells.push(index);
+                        } else {
+                            horizontalWin = false;
+                            break;
+                        }
+                    }
+                    if (horizontalWin) return { won: true, cells: winningCells };
+                }
+            }
+
+            for (let c = 0; c < size; c++) {
+                for (let r = 0; r <= size - winLen; r++) {
+                    // Check vertical
+                    let winningCells = [];
+                    let verticalWin = true;
+                    for (let k = 0; k < winLen; k++) {
+                        const index = (r + k) * size + c;
+                        if (board[index] === player) {
+                            winningCells.push(index);
+                        } else {
+                            verticalWin = false;
+                            break;
+                        }
+                    }
+                    if (verticalWin) return { won: true, cells: winningCells };
+                }
+            }
+
+            // Check diagonals (top-left to bottom-right)
+            for (let r = 0; r <= size - winLen; r++) {
+                for (let c = 0; c <= size - winLen; c++) {
+                    let winningCells = [];
+                    let diagWin = true;
+                    for (let k = 0; k < winLen; k++) {
+                        const index = (r + k) * size + (c + k);
+                        if (board[index] === player) {
+                            winningCells.push(index);
+                        } else {
+                            diagWin = false;
+                            break;
+                        }
+                    }
+                    if (diagWin) return { won: true, cells: winningCells };
+                }
+            }
+
+            // Check diagonals (top-right to bottom-left)
+            for (let r = 0; r <= size - winLen; r++) {
+                for (let c = winLen - 1; c < size; c++) {
+                    let winningCells = [];
+                    let antiDiagWin = true;
+                    for (let k = 0; k < winLen; k++) {
+                        const index = (r + k) * size + (c - k);
+                        if (board[index] === player) {
+                            winningCells.push(index);
+                        } else {
+                            antiDiagWin = false;
+                            break;
+                        }
+                    }
+                    if (antiDiagWin) return { won: true, cells: winningCells };
+                }
+            }
+
+            return { won: false, cells: [] };
+        }
+
+        function checkDraw() {
+            return gameState.board.every(cell => cell !== '');
+        }
+
+        function highlightWinningCells(winningCells, playerWon) {
+            winningCells.forEach(index => {
+                const cell = gameGrid.querySelector(`[data-index='${index}']`);
+                if (cell) {
+                    cell.classList.add(playerWon === 'X' ? 'win-cell-x' : 'win-cell-o');
+                }
+            });
+        }
+
+        function endGame(result, winningCells = []) {
+            gameState.gameActive = false;
+            let playerWon = gameState.currentPlayer;
+            let roundOverMessage = "";
+
+            if (result === 'win') {
+                gameState.score[playerWon]++;
+                updateScoreboard();
+                highlightWinningCells(winningCells, playerWon);
+                
+                if (gameState.score[playerWon] === 5) {
+                    roundOverMessage = `Player ${playerWon} WINS THE MATCH!`;
+                } else {
+                    roundOverMessage = `Player ${playerWon} wins the round! (${gameState.score.X} - ${gameState.score.O})`;
+                }
+                
+            } else if (result === 'draw') {
+                roundOverMessage = `Round is a Draw! (${gameState.score.X} - ${gameState.score.O})`;
+            }
+            
+            updateStatus(roundOverMessage);
+            
+            // Start next round after a delay, unless match is over
+            if (gameState.score.X < 5 && gameState.score.O < 5) {
+                setTimeout(startGame, 2500); // 2.5 second delay
+            }
+        }
+        
+        function updateScoreboard() {
+            scoreXDisplay.textContent = gameState.score.X;
+            scoreODisplay.textContent = gameState.score.O;
+        }
+        
+        function updateStatus(message) {
+            statusDisplay.textContent = message;
+        }
+
+        // --- AI LOGIC ---
+
+        function triggerAI() {
+            if (!gameState.gameActive) return;
+            
+            updateStatus('AI is thinking...');
+            let move;
+            
+            // Determine AI strategy
+            let aiStrategy = gameState.aiDifficulty;
+
+            // Get move from the selected AI
+            switch (aiStrategy) {
+                case 'easy':
+                    move = getEasyAIMove();
+                    break;
+                case 'medium':
+                    move = getMediumAIMove();
+                    break;
+                case 'hard':
+                    // Fallback to medium for 4x4
+                    move = getHardAIMove(gameState.board, gameState.aiPlayer);
+                    break;
+                default:
+                    move = getEasyAIMove();
+            }
+            
+             // Fallback if AI fails (should not happen)
+            if (move === null || gameState.board[move] !== '') {
+                console.error("AI failed to find a move, picking random.");
+                move = getEasyAIMove();
+            }
+
+            // Make the AI move
+            makeMove(move, gameState.aiPlayer);
+
+            if (checkGameEnd()) {
+                return;
+            }
+
+            // Switch back to human player
+            gameState.currentPlayer = gameState.humanPlayer;
+            updateStatus(`Player ${gameState.currentPlayer}'s Turn`);
+        }
+
+        function getEmptyCells(board) {
+            const cells = [];
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] === '') {
+                    cells.push(i);
+                }
+            }
+            return cells;
+        }
+
+        /**
+         * AI: Easy
+         * Selects a random available move.
+         */
+        function getEasyAIMove() {
+            const emptyCells = getEmptyCells(gameState.board);
+            if (emptyCells.length === 0) return null;
+            return emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        }
+
+        /**
+         * AI: Medium
+         * Uses a prioritized heuristic hierarchy.
+         */
+        function getMediumAIMove() {
+            const board = gameState.board;
+            const ai = gameState.aiPlayer;
+            const human = gameState.humanPlayer;
+            const emptyCells = getEmptyCells(board);
+            const size = gameState.gridSize;
+
+            // Helper function to check for a winning move
+            // This now respects the 4-in-a-row condition
+            const findWinningMove = (player) => {
+                for (const index of emptyCells) {
+                    board[index] = player; // Try move
+                    const winResult = checkWin(player);
+                    board[index] = ''; // Undo move
+                    if (winResult.won) {
+                        return index;
+                    }
+                }
+                return null;
+            };
+
+            // Rule 1: Win
+            let move = findWinningMove(ai);
+            if (move !== null) return move;
+
+            // Rule 2: Block
+            move = findWinningMove(human);
+            if (move !== null) return move;
+            
+            // Rule 3: Fork (Skipped for 4x4, much more complex)
+            // Rule 4: Block Fork (Skipped)
+
+            // Rule 5: Play Center (4x4 has 4 center squares)
+            const centerSquares = [5, 6, 9, 10];
+            const emptyCenterSquares = centerSquares.filter(index => emptyCells.includes(index));
+            if (emptyCenterSquares.length > 0) {
+                return emptyCenterSquares[Math.floor(Math.random() * emptyCenterSquares.length)];
+            }
+            
+            // Rule 6: Play Corner
+            const corners = [
+                0, size - 1, // Top row
+                (size - 1) * size, size * size - 1 // Bottom row
+            ];
+            const emptyCorners = corners.filter(index => emptyCells.includes(index));
+            if (emptyCorners.length > 0) {
+                return emptyCorners[Math.floor(Math.random() * emptyCorners.length)];
+            }
+            
+            // Rule 7: Play Side
+            // This is just a fallback to random
+            return getEasyAIMove();
+        }
+
+        /**
+         * AI: Hard
+         * Implements the Minimax algorithm.
+         */
+        function getHardAIMove(currentBoard, player) {
+            // Note: Minimax is too slow for 4x4 in a browser.
+            // It will only run on a 3x3 grid (which is not currently used).
+            if (gameState.gridSize !== 3) {
+                 // console.warn("Minimax AI only supports 3x3 grid. Defaulting to Medium.");
+                 return getMediumAIMove(); // Default to Medium logic for 4x4
+            }
+
+            // --- The 3x3 Minimax Logic (won't be called on 4x4) ---
+            let bestScore = -Infinity;
+            let bestMove = null;
+            
+            const emptyCells = getEmptyCells(currentBoard);
+            
+            for (const move of emptyCells) {
+                currentBoard[move] = player; // Make move
+                let score = minimax(currentBoard, 0, false);
+                currentBoard[move] = ''; // Undo move
+                
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMove = move;
+                }
+            }
+            return bestMove;
+        }
+        
+        const minimaxScores = {
+            [gameState.aiPlayer]: 10,
+            [gameState.humanPlayer]: -10,
+            'draw': 0
+        };
+
+        function minimax(board, depth, isMaximizing) {
+            // This checkWin is the 4x4 one, which is a bug if we ever run 3x3.
+            // But since gridSize is always 4, getHardAIMove always defaults to medium.
+            // This code is effectively dormant but kept for reference.
+            const aiWin = checkWin(gameState.aiPlayer).won;
+            const humanWin = checkWin(gameState.humanPlayer).won;
+            const draw = checkDraw();
+
+            if (aiWin) return minimaxScores[gameState.aiPlayer] - depth;
+            if (humanWin) return minimaxScores[gameState.humanPlayer] + depth;
+            if (draw) return minimaxScores['draw'];
+
+            const emptyCells = getEmptyCells(board);
+
+            if (isMaximizing) { // AI's turn
+                let bestScore = -Infinity;
+                for (const move of emptyCells) {
+                    board[move] = gameState.aiPlayer;
+                    let score = minimax(board, depth + 1, false);
+                    board[move] = '';
+                    bestScore = Math.max(score, bestScore);
+                }
+                return bestScore;
+            } else { // Human's turn
+                let bestScore = Infinity;
+                for (const move of emptyCells) {
+                    board[move] = gameState.humanPlayer;
+                    let score = minimax(board, depth + 1, true);
+                    board[move] = '';
+                    bestScore = Math.min(score, bestScore);
+                }
+                return bestScore;
+            }
+        }
+        
+    </script>
+</body>
+</html>
+
