@@ -26,7 +26,7 @@
 
         .container {
             width: 100%;
-            max-width: 800px; /* Wider to fit 3 cards */
+            max-width: 700px; /* Reduced width slightly for tighter look */
             padding: 20px;
             text-align: center;
         }
@@ -48,8 +48,8 @@
         /* --- Big Cards (Used for both Menus) --- */
         .card-grid {
             display: grid;
-            gap: 20px;
-            margin-top: 30px;
+            gap: 15px; /* Reduced gap */
+            margin-top: 25px;
         }
         
         /* 2 Columns for Main Menu */
@@ -65,26 +65,27 @@
         .big-card {
             background-color: var(--bg-card);
             border: 2px solid #374151;
-            border-radius: 16px;
-            padding: 40px 20px;
+            border-radius: 12px; /* Slightly tighter radius */
+            padding: 20px 15px; /* Significantly reduced padding */
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 8px; /* Reduced gap */
             height: 100%;
+            justify-content: center;
         }
 
         .big-card:hover {
             border-color: var(--accent-blue);
-            transform: translateY(-4px);
+            transform: translateY(-2px);
             background-color: #263042;
         }
 
-        .icon { font-size: 3rem; margin-bottom: 5px; }
-        .label { font-size: 1.25rem; font-weight: 700; color: white; }
-        .sub-label { font-size: 0.85rem; color: #9ca3af; font-weight: 500; }
+        .icon { font-size: 2rem; margin-bottom: 2px; } /* Smaller icons */
+        .label { font-size: 1.1rem; font-weight: 700; color: white; }
+        .sub-label { font-size: 0.8rem; color: #9ca3af; font-weight: 500; }
 
         /* --- Game Board --- */
         #game-grid {
@@ -125,9 +126,9 @@
             display: flex;
             justify-content: space-between;
             background-color: var(--bg-card);
-            padding: 15px 25px;
+            padding: 12px 20px;
             border-radius: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             border: 1px solid #374151;
             max-width: 500px;
             margin-left: auto;
@@ -144,7 +145,7 @@
             color: #6b7280;
             font-size: 0.9rem;
             cursor: pointer;
-            margin-top: 30px;
+            margin-top: 25px;
             font-weight: 600;
             transition: color 0.2s;
         }
