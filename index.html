@@ -2,288 +2,355 @@
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tic-Tac-Toe Trainer</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-body: #111827; /* Gray 900 */
-            --bg-card: #1f2937; /* Gray 800 */
-            --accent-blue: #3b82f6;
-            --accent-pink: #ec4899;
+            --bg-body: #0f172a;
+            --accent-blue: #38bdf8;
+            --accent-pink: #f472b6;
+            --card-surface: rgba(30, 41, 59, 0.7);
         }
 
         body {
             background-color: var(--bg-body);
-            color: #f3f4f6;
-            font-family: 'Inter', sans-serif;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(244, 114, 182, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: white;
+            font-family: 'Outfit', sans-serif;
             height: 100vh;
+            height: 100dvh; /* Mobile viewport fix */
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .container {
+        /* --- Layout & Container --- */
+        .app-container {
             width: 100%;
-            max-width: 700px;
-            padding: 20px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* Enforce center alignment for flex children */
-        }
-
-        /* --- Transitions --- */
-        .screen {
-            display: none;
-            width: 100%; /* Ensure screens take full width to center content */
-            animation: fadeIn 0.3s ease-out;
-        }
-        .screen.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* --- Big Cards --- */
-        .card-grid {
-            display: grid;
-            gap: 15px;
-            margin-top: 25px;
-            justify-content: center; /* Center the grid itself */
-        }
-        
-        .grid-2 { grid-template-columns: repeat(2, 1fr); }
-        .grid-3 { grid-template-columns: repeat(3, 1fr); }
-
-        @media (max-width: 640px) {
-            .grid-2, .grid-3 { grid-template-columns: 1fr; }
-        }
-
-        .big-card {
-            background-color: var(--bg-card);
-            border: 2px solid #374151;
-            border-radius: 12px;
-            padding: 20px 15px;
-            cursor: pointer;
-            transition: all 0.2s;
+            max-width: 600px;
+            padding: 1.5rem;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
             height: 100%;
-            text-align: center; /* Ensure text inside is centered */
+            justify-content: center;
+            position: relative;
         }
 
-        .big-card:hover {
-            border-color: var(--accent-blue);
-            transform: translateY(-2px);
-            background-color: #263042;
+        /* --- Screen Transitions --- */
+        .screen {
+            display: none;
+            width: 100%;
+            animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
         }
 
-        .icon { font-size: 2rem; margin-bottom: 2px; }
-        .label { font-size: 1.1rem; font-weight: 700; color: white; }
-        .sub-label { font-size: 0.8rem; color: #9ca3af; font-weight: 500; }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Colorful Menu Cards --- */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        @media (min-width: 640px) {
+            .menu-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .menu-card {
+            padding: 1.5rem;
+            border-radius: 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-card:active { transform: scale(0.98); }
+        .menu-card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); }
+
+        /* Card Variants */
+        .card-pvp {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
+            border-color: rgba(168, 85, 247, 0.3);
+        }
+        .card-pvp:hover { background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(168, 85, 247, 0.4)); }
+
+        .card-ai {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(14, 165, 233, 0.2));
+            border-color: rgba(14, 165, 233, 0.3);
+        }
+        .card-ai:hover { background: linear-gradient(135deg, rgba(16, 185, 129, 0.4), rgba(14, 165, 233, 0.4)); }
+
+        .card-icon { font-size: 2.5rem; margin-bottom: 0.25rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
+        .card-title { font-size: 1.25rem; font-weight: 800; letter-spacing: 0.02em; }
+        .card-sub { font-size: 0.85rem; opacity: 0.8; font-weight: 500; }
+
+        /* --- Difficulty List --- */
+        .diff-list {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .diff-btn {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 1rem 1.5rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .diff-btn:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.2);
+            transform: translateX(4px);
+        }
 
         /* --- Game Board --- */
         #game-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 8px;
+            width: 100%;
+            max-width: 400px; /* Limits size on desktop */
             aspect-ratio: 1;
-            margin: 20px auto; /* Auto margin centers block elements */
-            max-width: 400px;
+            margin: 0 auto;
         }
 
         .cell {
-            background-color: var(--bg-card);
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 0.75rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
-            font-weight: 800;
+            font-size: clamp(1.5rem, 8vw, 2.5rem);
+            font-weight: 900;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.15s;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            position: relative;
         }
 
-        .cell:hover:not(:disabled) {
-            background-color: #374151;
+        .cell:active { background: rgba(255,255,255,0.08); transform: scale(0.95); }
+
+        .cell.x { color: var(--accent-blue); text-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
+        .cell.o { color: var(--accent-pink); text-shadow: 0 0 15px rgba(244, 114, 182, 0.5); }
+
+        .cell.win {
+            background: rgba(255, 255, 255, 0.1);
+            animation: pulseWin 1s infinite alternate;
         }
 
-        .cell.x { color: var(--accent-blue); }
-        .cell.o { color: var(--accent-pink); }
-        
-        .cell.win { 
-            background-color: rgba(59, 130, 246, 0.2); 
-            border: 2px solid var(--accent-blue);
+        @keyframes pulseWin {
+            from { box-shadow: 0 0 10px rgba(255,255,255,0.1); }
+            to { box-shadow: 0 0 20px rgba(255,255,255,0.3); transform: scale(1.02); }
         }
 
-        /* --- Scoreboard --- */
+        /* --- Modern Scoreboard --- */
         .scoreboard {
-            display: flex;
-            justify-content: center; /* Centered content */
-            gap: 3rem; /* Spacing between scores */
-            background-color: var(--bg-card);
-            padding: 12px 20px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #374151;
-            max-width: 500px;
-            margin-left: auto;
-            margin-right: auto;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            width: 100%;
+            max-width: 400px;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 0.75rem 1.5rem;
+            border-radius: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
         }
-        .score-item { 
-            text-align: center; 
-            min-width: 80px; /* Prevent jitter when numbers change */
-        }
-        .score-num { font-size: 1.5rem; font-weight: 800; display: block; line-height: 1; }
-        .score-txt { font-size: 0.75rem; text-transform: uppercase; color: #9ca3af; font-weight: 700; margin-top: 4px; display: block;}
+
+        .player-info { display: flex; flex-direction: column; align-items: center; }
+        .player-score { font-size: 2rem; font-weight: 800; line-height: 1; }
+        .player-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.25rem; opacity: 0.7; }
         
-        .score-mid {
+        .vs-tag {
+            font-size: 0.75rem;
+            font-weight: 800;
+            background: rgba(255,255,255,0.1);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* --- Footer Controls --- */
+        .controls {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            opacity: 0.5;
+            gap: 1rem;
+            width: 100%;
+            max-width: 400px;
         }
 
-        /* --- Utilities --- */
-        .btn-back {
-            background: none;
-            border: none;
-            color: #6b7280;
+        .btn-control {
+            flex: 1;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
             font-size: 0.9rem;
             cursor: pointer;
-            margin-top: 25px;
-            font-weight: 600;
-            transition: color 0.2s;
-            display: inline-block; /* Helps with text-align center parent */
+            transition: all 0.2s;
+            border: none;
         }
-        .btn-back:hover { color: white; }
 
-        .btn-action {
-            background-color: #374151;
-            color: white;
-            border: none;
-            padding: 8px 24px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
+        .btn-secondary { background: rgba(255,255,255,0.08); color: #cbd5e1; }
+        .btn-secondary:hover { background: rgba(255,255,255,0.15); color: white; }
+        
+        .btn-primary { background: linear-gradient(to right, #3b82f6, #2563eb); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+        .btn-primary:active { transform: translateY(1px); }
+
+        /* --- Status Bar --- */
+        .status-pill {
+            padding: 0.5rem 1.25rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 2rem;
             font-size: 0.9rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            border: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 0.5rem;
         }
-        .btn-action:hover { background-color: #4b5563; }
 
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="app-container">
 
         <!-- SCREEN 1: Main Menu -->
         <div id="screen-menu" class="screen active">
-            <h1 class="text-4xl font-bold text-white mb-2">Tic-Tac-Toe</h1>
-            <p class="text-gray-400">4x4 Trainer • First to 5</p>
+            <div class="text-center mb-6">
+                <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-400 mb-2">Tic Tac Toe</h1>
+                <p class="text-slate-400 font-medium">4x4 Master • First to 5</p>
+            </div>
 
-            <div class="card-grid grid-2">
-                <!-- Box 1: 2 Players -->
-                <div class="big-card" onclick="startGame('pvp')">
-                    <div class="icon">👥</div>
-                    <div class="label">2 Players</div>
-                    <div class="sub-label">Play with a friend</div>
+            <div class="menu-grid">
+                <!-- 2 Players Card -->
+                <div class="menu-card card-pvp" onclick="startGame('pvp')">
+                    <div class="card-icon">👥</div>
+                    <div class="card-title">2 Players</div>
+                    <div class="card-sub">Play with a friend locally</div>
                 </div>
 
-                <!-- Box 2: Vs AI -->
-                <div class="big-card" onclick="showScreen('difficulty')">
-                    <div class="icon">🤖</div>
-                    <div class="label">Vs AI</div>
-                    <div class="sub-label">Challenge the Computer</div>
+                <!-- Vs AI Card -->
+                <div class="menu-card card-ai" onclick="showScreen('difficulty')">
+                    <div class="card-icon">🤖</div>
+                    <div class="card-title">Vs AI</div>
+                    <div class="card-sub">Challenge the smart bot</div>
                 </div>
             </div>
         </div>
 
         <!-- SCREEN 2: Difficulty Selection -->
         <div id="screen-difficulty" class="screen">
-            <h2 class="text-3xl font-bold text-white mb-2">Select AI Level</h2>
-            <p class="text-gray-400">Choose your opponent strength</p>
+            <h2 class="text-3xl font-bold mb-6">Select Difficulty</h2>
             
-            <div class="card-grid grid-3">
-                <!-- Easy -->
-                <div class="big-card" onclick="startGame('ai', 'easy')">
-                    <div class="icon">🌱</div>
-                    <div class="label">Easy</div>
-                    <div class="sub-label">Random Moves</div>
+            <div class="diff-list">
+                <div class="diff-btn" onclick="startGame('ai', 'easy')">
+                    <span class="text-2xl">🌱</span>
+                    <div class="flex flex-col text-left">
+                        <span class="font-bold text-green-400">Easy</span>
+                        <span class="text-xs text-slate-400">Random moves, nice and chill</span>
+                    </div>
                 </div>
 
-                <!-- Medium -->
-                <div class="big-card" onclick="startGame('ai', 'medium')">
-                    <div class="icon">🥊</div>
-                    <div class="label">Medium</div>
-                    <div class="sub-label">Smart Tactics</div>
+                <div class="diff-btn" onclick="startGame('ai', 'medium')">
+                    <span class="text-2xl">⚡</span>
+                    <div class="flex flex-col text-left">
+                        <span class="font-bold text-yellow-400">Medium</span>
+                        <span class="text-xs text-slate-400">Smart tactics, will block you</span>
+                    </div>
                 </div>
 
-                <!-- Hard -->
-                <div class="big-card" onclick="startGame('ai', 'hard')">
-                    <div class="icon">🔥</div>
-                    <div class="label">Hard</div>
-                    <div class="sub-label">Expert Mode</div>
+                <div class="diff-btn" onclick="startGame('ai', 'hard')">
+                    <span class="text-2xl">🔥</span>
+                    <div class="flex flex-col text-left">
+                        <span class="font-bold text-red-400">Hard</span>
+                        <span class="text-xs text-slate-400">Expert depth search</span>
+                    </div>
                 </div>
             </div>
 
-            <button class="btn-back" onclick="showScreen('menu')">← Go Back</button>
+            <button class="text-slate-500 font-bold mt-4 hover:text-white transition-colors" onclick="showScreen('menu')">← Back to Menu</button>
         </div>
 
-        <!-- SCREEN 3: Game -->
+        <!-- SCREEN 3: Game Board -->
         <div id="screen-game" class="screen">
             
             <!-- Scoreboard -->
             <div class="scoreboard">
-                <div class="score-item">
-                    <span class="score-num text-blue-500" id="score-x">0</span>
-                    <span class="score-txt">Player X</span>
+                <div class="player-info">
+                    <div class="player-score text-blue-400" id="score-x">0</div>
+                    <div class="player-label">Player X</div>
                 </div>
-                <div class="score-mid">
-                    <span class="text-sm font-bold">VS</span>
-                </div>
-                <div class="score-item">
-                    <span class="score-num text-pink-500" id="score-o">0</span>
-                    <span class="score-txt">Player O</span>
+                <div class="vs-tag">TO 5</div>
+                <div class="player-info">
+                    <div class="player-score text-pink-400" id="score-o">0</div>
+                    <div class="player-label">Player O</div>
                 </div>
             </div>
 
             <!-- Status -->
-            <div id="status-msg" class="text-lg font-bold text-blue-400 mb-2">Player X's Turn</div>
+            <div id="status-msg" class="status-pill">Player X's Turn</div>
 
             <!-- Grid -->
             <div id="game-grid">
-                <!-- JS creates cells -->
+                <!-- Cells generated here -->
             </div>
 
             <!-- Controls -->
-            <div class="flex justify-center gap-4 mt-6">
-                <button class="btn-action" onclick="showScreen('menu')">Main Menu</button>
-                <button class="btn-action" onclick="resetRound()">Reset Board</button>
+            <div class="controls">
+                <button class="btn-control btn-secondary" onclick="showScreen('menu')">Menu</button>
+                <button class="btn-control btn-primary" onclick="resetRound()">Next Round</button>
             </div>
         </div>
 
     </div>
 
 <script>
-    // --- State ---
+    // --- State Management ---
     const state = {
         board: Array(16).fill(''),
         currentPlayer: 'X',
         gameActive: false,
-        mode: null,      // 'pvp' or 'ai'
-        difficulty: null,// 'easy', 'medium', 'hard'
+        mode: null,      
+        difficulty: null,
         scores: { X: 0, O: 0 }
     };
 
-    // --- DOM ---
+    // --- DOM Elements ---
     const screens = {
         menu: document.getElementById('screen-menu'),
         difficulty: document.getElementById('screen-difficulty'),
@@ -294,7 +361,7 @@
     const scoreXEl = document.getElementById('score-x');
     const scoreOEl = document.getElementById('score-o');
 
-    // --- Navigation ---
+    // --- Navigation Logic ---
     function showScreen(name) {
         Object.values(screens).forEach(s => s.classList.remove('active'));
         screens[name].classList.add('active');
@@ -320,14 +387,15 @@
         renderCells();
     }
 
-    // --- Game Logic ---
+    // --- Grid Rendering ---
     function renderGrid() {
         gridEl.innerHTML = '';
         state.board.forEach((_, i) => {
             const cell = document.createElement('div');
             cell.className = 'cell';
             cell.id = `c-${i}`;
-            cell.onclick = () => handleInput(i);
+            // Handle touchstart for faster mobile response
+            cell.addEventListener('click', () => handleInput(i));
             gridEl.appendChild(cell);
         });
     }
@@ -340,26 +408,27 @@
         });
     }
 
+    // --- Game Logic ---
     function handleInput(i) {
         if (!state.gameActive || state.board[i] !== '') return;
 
-        // Player Move
+        // Human Move
         makeMove(i, state.currentPlayer);
 
         if (checkWinOrDraw()) return;
 
-        // Swap Turn
+        // Switch Turn
         state.currentPlayer = state.currentPlayer === 'X' ? 'O' : 'X';
         updateStatus();
 
         // AI Turn
         if (state.mode === 'ai' && state.currentPlayer === 'O') {
-            state.gameActive = false; // Lock board
+            state.gameActive = false; // Lock
             statusEl.innerText = "AI Thinking...";
             setTimeout(() => {
                 makeAIMove();
                 state.gameActive = true; 
-            }, 500);
+            }, 400);
         }
     }
 
@@ -368,34 +437,38 @@
         const cell = document.getElementById(`c-${i}`);
         cell.innerText = player;
         cell.classList.add(player === 'X' ? 'x' : 'o');
+        
+        // Slight haptic vibration on mobile if supported
+        if (navigator.vibrate) navigator.vibrate(10);
     }
 
     function updateStatus() {
         statusEl.innerText = `Player ${state.currentPlayer}'s Turn`;
-        statusEl.className = `text-lg font-bold mb-2 ${state.currentPlayer === 'X' ? 'text-blue-400' : 'text-pink-400'}`;
+        statusEl.style.color = state.currentPlayer === 'X' ? 'var(--accent-blue)' : 'var(--accent-pink)';
     }
 
-    // --- Win Check (4x4) ---
     function checkWinOrDraw() {
         const win = getWinningLine(state.board, state.currentPlayer);
         
         if (win) {
             state.gameActive = false;
-            // Highlight
+            // Highlight winning cells
             win.forEach(idx => {
                 document.getElementById(`c-${idx}`).classList.add('win');
             });
             
-            // Score
+            // Update Score
             state.scores[state.currentPlayer]++;
             scoreXEl.innerText = state.scores.X;
             scoreOEl.innerText = state.scores.O;
 
             if (state.scores[state.currentPlayer] >= 5) {
                 statusEl.innerText = `${state.currentPlayer} WINS THE MATCH! 🏆`;
-                statusEl.className = "text-xl font-extrabold text-yellow-400 mb-2";
+                statusEl.style.color = "#fbbf24"; // Gold
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
             } else {
                 statusEl.innerText = `${state.currentPlayer} Wins Round!`;
+                if (navigator.vibrate) navigator.vibrate(50);
                 setTimeout(resetRound, 1500);
             }
             return true;
@@ -404,38 +477,37 @@
         if (!state.board.includes('')) {
             state.gameActive = false;
             statusEl.innerText = "Draw!";
-            statusEl.className = "text-lg font-bold text-gray-400 mb-2";
+            statusEl.style.color = "#94a3b8";
             setTimeout(resetRound, 1500);
             return true;
         }
         return false;
     }
 
+    // --- Win Conditions (4-in-a-row) ---
     function getWinningLine(board, p) {
         const size = 4;
-        // Rows, Cols, Diags
+        // Rows & Cols
         for (let i = 0; i < size; i++) {
-            // Row
             if (board[i*4]==p && board[i*4+1]==p && board[i*4+2]==p && board[i*4+3]==p) 
                 return [i*4, i*4+1, i*4+2, i*4+3];
-            // Col
             if (board[i]==p && board[i+4]==p && board[i+8]==p && board[i+12]==p)
                 return [i, i+4, i+8, i+12];
         }
-        // Diags
+        // Diagonals
         if (board[0]==p && board[5]==p && board[10]==p && board[15]==p) return [0,5,10,15];
         if (board[3]==p && board[6]==p && board[9]==p && board[12]==p) return [3,6,9,12];
         return null;
     }
 
-    // --- AI Logic ---
+    // --- AI Implementation ---
     function makeAIMove() {
         let move = null;
         if (state.difficulty === 'easy') move = getRandomMove();
         else if (state.difficulty === 'medium') move = getMediumMove();
         else move = getHardMove();
 
-        if (move === null) move = getRandomMove(); // Safety
+        if (move === null) move = getRandomMove(); // Fallback
         
         makeMove(move, 'O');
         
@@ -455,13 +527,11 @@
     }
 
     function getMediumMove() {
-        // 1. Win?
+        // 1. Win, 2. Block, 3. Center, 4. Random
         let m = findWinMove('O');
         if (m !== null) return m;
-        // 2. Block?
         m = findWinMove('X');
         if (m !== null) return m;
-        // 3. Center
         const centers = [5,6,9,10].filter(i => state.board[i] === '');
         if (centers.length) return centers[Math.floor(Math.random()*centers.length)];
         return getRandomMove();
@@ -472,7 +542,7 @@
         for (let i of e) {
             state.board[i] = player;
             if (getWinningLine(state.board, player)) {
-                state.board[i] = ''; // undo
+                state.board[i] = '';
                 return i;
             }
             state.board[i] = '';
@@ -480,9 +550,8 @@
         return null;
     }
 
-    // Hard AI (Depth-Limited Minimax)
     function getHardMove() {
-        // Depth 4 is good balance for browser 4x4
+        // Depth 4 Minimax
         return minimax(state.board, 4, -Infinity, Infinity, true).index;
     }
 
@@ -517,7 +586,7 @@
         }
     }
 
-    // Init
+    // Initialize
     renderGrid();
 
 </script>
