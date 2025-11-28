@@ -26,14 +26,18 @@
 
         .container {
             width: 100%;
-            max-width: 700px; /* Reduced width slightly for tighter look */
+            max-width: 700px;
             padding: 20px;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Enforce center alignment for flex children */
         }
 
         /* --- Transitions --- */
         .screen {
             display: none;
+            width: 100%; /* Ensure screens take full width to center content */
             animation: fadeIn 0.3s ease-out;
         }
         .screen.active {
@@ -45,19 +49,17 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* --- Big Cards (Used for both Menus) --- */
+        /* --- Big Cards --- */
         .card-grid {
             display: grid;
-            gap: 15px; /* Reduced gap */
+            gap: 15px;
             margin-top: 25px;
+            justify-content: center; /* Center the grid itself */
         }
         
-        /* 2 Columns for Main Menu */
         .grid-2 { grid-template-columns: repeat(2, 1fr); }
-        /* 3 Columns for Difficulty */
         .grid-3 { grid-template-columns: repeat(3, 1fr); }
 
-        /* Mobile Responsive */
         @media (max-width: 640px) {
             .grid-2, .grid-3 { grid-template-columns: 1fr; }
         }
@@ -65,16 +67,17 @@
         .big-card {
             background-color: var(--bg-card);
             border: 2px solid #374151;
-            border-radius: 12px; /* Slightly tighter radius */
-            padding: 20px 15px; /* Significantly reduced padding */
+            border-radius: 12px;
+            padding: 20px 15px;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px; /* Reduced gap */
-            height: 100%;
             justify-content: center;
+            gap: 8px;
+            height: 100%;
+            text-align: center; /* Ensure text inside is centered */
         }
 
         .big-card:hover {
@@ -83,7 +86,7 @@
             background-color: #263042;
         }
 
-        .icon { font-size: 2rem; margin-bottom: 2px; } /* Smaller icons */
+        .icon { font-size: 2rem; margin-bottom: 2px; }
         .label { font-size: 1.1rem; font-weight: 700; color: white; }
         .sub-label { font-size: 0.8rem; color: #9ca3af; font-weight: 500; }
 
@@ -93,7 +96,7 @@
             grid-template-columns: repeat(4, 1fr);
             gap: 8px;
             aspect-ratio: 1;
-            margin: 20px auto;
+            margin: 20px auto; /* Auto margin centers block elements */
             max-width: 400px;
         }
 
@@ -124,7 +127,8 @@
         /* --- Scoreboard --- */
         .scoreboard {
             display: flex;
-            justify-content: space-between;
+            justify-content: center; /* Centered content */
+            gap: 3rem; /* Spacing between scores */
             background-color: var(--bg-card);
             padding: 12px 20px;
             border-radius: 12px;
@@ -134,9 +138,19 @@
             margin-left: auto;
             margin-right: auto;
         }
-        .score-item { text-align: center; }
-        .score-num { font-size: 1.5rem; font-weight: 800; display: block; }
-        .score-txt { font-size: 0.75rem; text-transform: uppercase; color: #9ca3af; font-weight: 700;}
+        .score-item { 
+            text-align: center; 
+            min-width: 80px; /* Prevent jitter when numbers change */
+        }
+        .score-num { font-size: 1.5rem; font-weight: 800; display: block; line-height: 1; }
+        .score-txt { font-size: 0.75rem; text-transform: uppercase; color: #9ca3af; font-weight: 700; margin-top: 4px; display: block;}
+        
+        .score-mid {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0.5;
+        }
 
         /* --- Utilities --- */
         .btn-back {
@@ -148,6 +162,7 @@
             margin-top: 25px;
             font-weight: 600;
             transition: color 0.2s;
+            display: inline-block; /* Helps with text-align center parent */
         }
         .btn-back:hover { color: white; }
 
@@ -155,7 +170,7 @@
             background-color: #374151;
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 8px 24px;
             border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
@@ -231,8 +246,8 @@
                     <span class="score-num text-blue-500" id="score-x">0</span>
                     <span class="score-txt">Player X</span>
                 </div>
-                <div class="flex flex-col justify-center">
-                    <span class="text-xs text-gray-500 font-bold">TARGET: 5</span>
+                <div class="score-mid">
+                    <span class="text-sm font-bold">VS</span>
                 </div>
                 <div class="score-item">
                     <span class="score-num text-pink-500" id="score-o">0</span>
